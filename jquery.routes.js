@@ -1,5 +1,10 @@
 ﻿(function($) {
 	$.routes = { 
+		datatypes: {
+			'd':	'\\d*?',
+			'w':	'\\w*?',
+			'date':	'\\d{1,2}\\.\\d{1,2}\\.\\d{4}'
+		},
 		list: [],
 		routes: {},
 		current: null,
@@ -25,10 +30,8 @@
 				items.push('s=s.replace("' + match[0] + '",p.' + first + ');');
 				item = item.replace(match[0], '');
 				if (extra) {
-					switch (extra) {
-						case 'd': extra = '\\d*?'; break;
-						case 'w': extra = '\\w*?'; break;
-						case 'date': extra = '\\d{1,2}\\.\\d{1,2}\\.\\d{4}'; break;
+					if ($.routes.datatypes[extra]) {
+						extra = $.routes.datatypes[extra];
 					}
 					routeexp = routeexp.replace(match[0], '(' + extra + ')');
 				} else {
