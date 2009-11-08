@@ -1,4 +1,14 @@
-﻿(function($) {
+/**
+ * jquery.routes.js
+ * Routes in javascript using window.onhashchange event.
+ * 
+ * Copyright (c) 2009 Ægir Þorsteinsson
+ * http://thorsteinsson.is
+ *
+ * Licensed under a Creative Commons Attribution 3.0 license
+ * http://creativecommons.org/licenses/by/3.0/
+ */
+(function($) {
 	$.routes = { 
 		datatypes: {
 			'd':	'\\d*?',
