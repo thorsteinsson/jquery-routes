@@ -1,9 +1,25 @@
-﻿(function($) {
+﻿/**
+ * jquery.routing.js
+ * Routing in javascript using window.onhashchange event.
+ * 
+ * Copyright (c) 2009 Ægir Þorsteinsson
+ * http://thorsteinsson.is
+ *
+ * Licensed under a Creative Commons Attribution 3.0 license
+ * http://creativecommons.org/licenses/by/3.0/
+ */
+(function($) {
 	$.routes = { 
 		datatypes: {
-			'd':	'\\d*?',
-			'w':	'\\w*?',
-			'date':	'\\d{1,2}\\.\\d{1,2}\\.\\d{4}'
+			'int':	/\d*?/,
+			'float': /\d+\.\d+/, //[+-]?[\d+\.?]|[\d*\.\d+]/,
+			'word':	/\w*?/,
+			'date':	/(\d{1,2})\.(\d{1,2})\.(\d{4})/
+		},
+		converters: {
+			'int': function(d) { return parseInt(d); },
+			'float': function(d) { return parseFloat(d); },
+			'date': function(d, dd, mm, yyyy) { return new Date(yyyy, mm, dd); }
 		},
 		list: [],
 		routes: {},
@@ -15,6 +31,7 @@
 				this.current.func.execute(args);
 			}
 		},
+		debug: true,
 		add: function(func, route, name, defaults) {
 			if (name === undefined) { name = 'route' + (++this.length); }
 
@@ -32,17 +49,18 @@
 				if (extra) {
 					if ($.routes.datatypes[extra]) {
 						extra = $.routes.datatypes[extra];
+						extra = extra.toString().replace(/\(/g, '').replace(/\)/g, ''); // remove groups
+						extra = extra.substring(1, extra.length - 1);
 					}
 					routeexp = routeexp.replace(match[0], '(' + extra + ')');
 				} else {
 					routeexp = routeexp.replace(match[0], '(.*?)');
 				}
-				vars.push(match[1].split(':')[0]);
+				vars.push(match[1].split(':'));
 				regex.lastIndex = match.index;
 			}
 			items.push('return s;');
 
-			
 			this.list.push(this.routes[name] = {
 				exp: new RegExp(routeexp, 'i'),
 				route: route,
@@ -70,7 +88,20 @@
 				if (exp) {
 					var context = route.defaults ? route.defaults : {};
 					for (var i = 0; i < route.vars.length; i++) {
-						context[route.vars[i]] = exp[i + 1];
+						var converter = this.converters[route.vars[i][1]];
+						var val = exp[i + 1];
+						if (converter) {
+							val = [val];
+							var datatype = this.datatypes[route.vars[i][1]];
+							if (datatype) {
+								var matches = datatype.exec(exp[i+1]);
+								for (var x = 1; x < matches.length; x++) {
+									val.push(matches[x]);
+								}
+							}
+							val = converter.apply(this, val);
+						}
+						context[route.vars[i][0]] = val;
 					}
 					$.routes.current = route;
 					$.routes.current.arguments = context;
