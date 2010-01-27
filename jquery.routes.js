@@ -1,5 +1,5 @@
 ﻿/**
- * jquery.routing.js
+ * jquery.routes.js
  * Routing in javascript using window.onhashchange event.
  * 
  * Copyright (c) 2009 Ægir Þorsteinsson
@@ -12,7 +12,7 @@
 	$.routes = { 
 		datatypes: {
 			'int':	/\d*?/,
-			'float': /\d+\.\d+/, //[+-]?[\d+\.?]|[\d*\.\d+]/,
+			'float': /\d+\.\d+/,
 			'word':	/\w*?/,
 			'date':	/(\d{1,2})\.(\d{1,2})\.(\d{4})/
 		},
