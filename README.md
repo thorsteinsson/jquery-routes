@@ -5,8 +5,8 @@ Setup
 -----
 Include the jQuery(http://jquery.com/) library and the jquery.routes.js file.
 
-`<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-<script type="text/javascript" src="jquery.routes.js"></script>`
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript" src="jquery.routes.js"></script>
 
 Usage
 -----
