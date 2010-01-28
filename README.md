@@ -13,7 +13,7 @@ Usage
 
 Link routes to javascript functions. Make sure the functions prepare the ui for this state of the application. Remember that you can go directly to a route without visiting the main route.
 
-	&lt;script type="text/javascript"&gt;
+	<script type="text/javascript">
 	var newsModule = {
 		fetch: function() {
 			$('#news').load('news.php?id=' + this.id).show();
@@ -25,7 +25,7 @@ Link routes to javascript functions. Make sure the functions prepare the ui for 
 	
 	$.routes.add(newsModule.fetch, '/news/{id:int}/');
 	$.routes.add(newsModule.fetchAll, '/news/');
-	&lt;/script&gt;
+	</script>
 
 or anonymous functions
 
