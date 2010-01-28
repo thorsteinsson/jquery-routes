@@ -9,112 +9,137 @@
  * http://creativecommons.org/licenses/by/3.0/
  */
 (function($) {
-	$.routes = { 
-		datatypes: {
-			'int':	/\d*?/,
-			'float': /\d+\.\d+/,
-			'word':	/\w*?/,
-			'date':	/(\d{1,2})\.(\d{1,2})\.(\d{4})/
-		},
-		converters: {
-			'int': function(d) { return parseInt(d); },
-			'float': function(d) { return parseFloat(d); },
-			'date': function(d, dd, mm, yyyy) { return new Date(yyyy, mm, dd); }
-		},
-		list: [],
-		routes: {},
-		current: null,
-		length: 0,
-		reload: function(args) {
-			if (this.current) {
-				args = $.extend(this.current.arguments, args);
-				this.current.func.execute(args);
-			}
-		},
-		debug: true,
-		add: function(func, route, name, defaults) {
-			if (name === undefined) { name = 'route' + (++this.length); }
-
-			var regex = /\{\s*?([a-zA-Z0-9:\|\\*\?\.]*?)\s*?\}/gim;
-			var items = ['var s="#' + route + '";'];
-			var item = route;
-			var routeexp = '^' + route;
-			var vars = [];
-			while (match = regex.exec(item)) {
-				var arr = match[1].split(':');
-				var first = arr[0];
-				var extra = arr[1];
-				items.push('s=s.replace("' + match[0] + '",p.' + first + ');');
-				item = item.replace(match[0], '');
-				if (extra) {
-					if ($.routes.datatypes[extra]) {
-						extra = $.routes.datatypes[extra];
-						extra = extra.toString().replace(/\(/g, '').replace(/\)/g, ''); // remove groups
-						extra = extra.substring(1, extra.length - 1);
-					}
-					routeexp = routeexp.replace(match[0], '(' + extra + ')');
-				} else {
-					routeexp = routeexp.replace(match[0], '(.*?)');
+	var routecount = 0;
+	$.extend({
+		routes: {
+			// datatype detectors for parameters
+			datatypes: {
+				'int':		/\d*?/,
+				'float':	/\d+\.\d+/,
+				'word':		/\w*?/,
+				'date':		/(\d{1,2})\.(\d{1,2})\.(\d{4})/
+			},
+			// convert parameter to correct datatype, the regex groups are passed as arguments
+			parsers: {
+				'int':	function(d) { return parseInt(d); },
+				'float':	function(d) { return parseFloat(d); },
+				'date':	function(d, dd, mm, yyyy) { return new Date(yyyy, mm, dd); }
+			},
+			// object containing all the routes by name
+			list: {},
+			// current executed route with parameter info
+			current: null,
+			// reload the current route with same or different parameters
+			reload: function(args) {
+				if (this.current) {
+					args = $.extend(this.current.arguments, args);
+					this.current.func.execute(args);
 				}
-				vars.push(match[1].split(':'));
-				regex.lastIndex = match.index;
-			}
-			items.push('return s;');
-
-			this.list.push(this.routes[name] = {
-				exp: new RegExp(routeexp, 'i'),
-				route: route,
-				func: func,
-				url: new Function('p', items.join('')),
-				routeTo: function(data) {
-					window.location.href = this.url($.extend(defaults, data));
-				},
-				execute: function(data) {
-					this.func.apply($.extend(defaults, data));
-				},
-				vars: vars,
-				defaults: defaults
-			});
-		},
-		get: function(name) {
-			return this.routes[name];
-		},
-		changeHash: function(hash) {
-			var route;
-			var l = hash.substr(1);
-			for (var i = 0; i < this.list.length; i++) {
-				route = this.list[i];
-				var exp = route.exp.exec(l);
-				if (exp) {
-					var context = route.defaults ? route.defaults : {};
-					for (var i = 0; i < route.vars.length; i++) {
-						var converter = this.converters[route.vars[i][1]];
-						var val = exp[i + 1];
-						if (converter) {
-							val = [val];
-							var datatype = this.datatypes[route.vars[i][1]];
-							if (datatype) {
-								var matches = datatype.exec(exp[i+1]);
-								for (var x = 1; x < matches.length; x++) {
-									val.push(matches[x]);
-								}
-							}
-							val = converter.apply(this, val);
+			},
+			// add a route, they can be named and with default parameters
+			add: function(func, route, name, defaults) {
+				if (name === undefined) { name = 'route' + (++routecount); }
+	
+				var regex = /\{\s*?([a-zA-Z0-9:\|\\*\?\.]*?)\s*?\}/gim;
+				var items = ['var s="#' + route + '";'];
+				var item = route;
+				var routeexp = '^' + route;
+				var vars = [];
+				while (match = regex.exec(item)) {
+					var arr = match[1].split(':');
+					var first = arr[0];
+					var extra = arr[1];
+					items.push('s=s.replace("' + match[0] + '",p.' + first + ');');
+					item = item.replace(match[0], '');
+					if (extra) {
+						if ($.routes.datatypes[extra]) {
+							extra = $.routes.datatypes[extra];
+							extra = extra.toString().replace(/\(/g, '').replace(/\)/g, ''); // remove groups
+							extra = extra.substring(1, extra.length - 1);
 						}
-						context[route.vars[i][0]] = val;
+						routeexp = routeexp.replace(match[0], '(' + extra + ')');
+					} else {
+						routeexp = routeexp.replace(match[0], '(.*?)');
 					}
-					$.routes.current = route;
-					$.routes.current.arguments = context;
-					route.func.apply(context);
-					break;
+					vars.push(match[1].split(':'));
+					regex.lastIndex = match.index;
 				}
+				items.push('return s;');
+	
+				this.list[name] = {
+					name: name,
+					exp: new RegExp(routeexp, 'i'),
+					route: route,
+					func: func,
+					url: new Function('p', items.join('')),
+					routeTo: function(data) {
+						window.location.href = this.url($.extend(defaults, data));
+					},
+					execute: function(data) {
+						data = $.extend(defaults, data);
+						$.routes.current = this;
+						$.routes.current.arguments = data;
+						this.func.apply(data);
+					},
+					vars: vars,
+					defaults: defaults
+				};
+			},
+			// get a registered route with name			
+			get: function(name) {
+				return this.list[name];
+			},
+			// load a hash and find the correct route to execute
+			load: function(hash) {
+				hash = hash.substr(1);
+				var route;
+				var args;
+				// search for routes
+				$.each(this.list, function(i, match) {
+					// check for a match
+					var exp = match.exp.exec(hash);
+					if (exp) {
+						if ((route && match.route.length > route.route.length) || !route) {
+							route = match;
+							args = exp;
+						}
+					}
+				});
+				
+				// load the defaults
+				var context = route.defaults ? route.defaults : {};
+				// get parameters
+				$.each(route.vars, function(x, vars) {
+					var parser = $.routes.parsers[vars[1]];
+					var val = args[x+1];
+					// parse parameter
+					if (parser) {
+						var datatype = $.routes.datatypes[vars[1]];
+						val = [val];
+						// get arguments for parser
+						if (datatype) {
+							var p = datatype.exec(args[x+1]);
+							for (var y = 1; y < p.length; y++) {
+								val.push(p[y]);
+							}
+						}
+						val = parser.apply(this, val);
+					}
+					context[vars[0]] = val;
+				});
+				
+				// execute route
+				route.execute(context);
 			}
 		}
-	};
+	});
 
+	// Listen for hash change event
 	window.onhashchange = function() {
-		$.routes.changeHash(location.hash);
+		$.routes.load(location.hash);
 	};
+	
+	// Run route on document ready
 	$(function() {
 		if (location.hash.length > 0) {
 			window.onhashchange();

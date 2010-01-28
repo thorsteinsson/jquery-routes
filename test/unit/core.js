@@ -4,8 +4,8 @@ jQuery(function($){
 		$.routes.add(function() {
 			ok(true, "Route was called");
 			start();
-		}, '/route/', 'route');
-		$.routes.get('route').routeTo();
+		}, '/route/');
+		$.routes.get('route1').routeTo();
 	});
 
 	asyncTest("call a route with param", function() {
