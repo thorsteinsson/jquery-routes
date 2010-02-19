@@ -17,13 +17,15 @@
 				'int':		/\d*?/,
 				'float':	/\d+\.\d+/,
 				'word':		/\w*?/,
-				'date':		/(\d{1,2})\.(\d{1,2})\.(\d{4})/
+				'date':		/(\d{1,2})\.(\d{1,2})\.(\d{4})/,
+				'dateend':  /(\d{1,2})\.(\d{1,2})\.(\d{4})/
 			},
 			// convert parameter to correct datatype, the regex groups are passed as arguments
 			parsers: {
 				'int':	function(d) { return parseInt(d); },
-				'float':	function(d) { return parseFloat(d); },
-				'date':	function(d, dd, mm, yyyy) { return new Date(yyyy, mm, dd); }
+				'float': function(d) { return parseFloat(d); },
+				'date':	function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd); },
+				'dateend':	function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); }
 			},
 			// object containing all the routes by name
 			list: {},
@@ -33,7 +35,14 @@
 			reload: function(args) {
 				if (this.current) {
 					args = $.extend(this.current.arguments, args);
-					this.current.func.execute(args);
+					var url = this.current.url(args);
+					if (url !== location.hash) {
+						this.current.routeTo(args);
+					} else {
+						this.current.execute(args);
+					}
+				} else {
+					location.href.replace(location.href);
 				}
 			},
 			// add a route, they can be named and with default parameters
@@ -73,20 +82,21 @@
 					func: func,
 					url: new Function('p', items.join('')),
 					routeTo: function(data) {
-						window.location.href = this.url($.extend(defaults, data));
+						location.href = this.url($.extend({}, this.defaults, data));
 					},
 					execute: function(data) {
-						data = $.extend(defaults, data);
+						data = $.extend({}, this.defaults, data);
 						$.routes.current = this;
 						$.routes.current.arguments = data;
 						this.func.apply(data);
 					},
 					vars: vars,
-					defaults: defaults
+					defaults: defaults,
+					level: route.length - route.replace(new RegExp("/", "g"), '').length
 				};
 			},
 			// get a registered route with name			
-			get: function(name) {
+			find: function(name) {
 				return this.list[name];
 			},
 			// load a hash and find the correct route to execute
@@ -99,12 +109,15 @@
 					// check for a match
 					var exp = match.exp.exec(hash);
 					if (exp) {
-						if ((route && match.route.length > route.route.length) || !route) {
+						if ((route && match.level > route.level) || !route) {
 							route = match;
 							args = exp;
 						}
 					}
 				});
+				
+				// route not found
+				if (!route) { return; }
 				
 				// load the defaults
 				var context = route.defaults ? route.defaults : {};
