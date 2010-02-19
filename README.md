@@ -10,7 +10,6 @@ Include the [jQuery](http://jquery.com/) library and the jquery.routes.js file.
 
 Usage
 -----
-
 Link routes to javascript functions. Make sure the functions prepare the ui for this state of the application. Remember that you can go directly to a route without visiting the main route.
 
 	<script type="text/javascript">
@@ -39,3 +38,25 @@ Parameters are defined with curly braces. The syntax is {name:datatype}. The dat
 Datatypes are added in $.routes.datatypes and parsers in $.routes.parsers.
 The datatype for parameters can also be a regular expression, ex. {page:news|help|about}.
 The functions will get named parameters in "this", ex. this.page == 'news'. 
+
+Named routes
+
+	<script type="text/javascript">
+	// register the route
+	$.routes.add(function() {
+		alert('loading news from ' + this.when);
+	}, '/news/{when:date}/', 'newsByDate');
+	
+	$('#get-news').click(function() {
+		// change the url to this route (with this date as parameter)
+		$.routes.find('newsByDate').routeTo({
+			when: new Date(2010, 1, 19);
+		});
+	});
+	</script>
+
+Use routeTo function to change the url or use execute function to only execute the function for that route.
+
+Tests
+----------
+Tests are written using QUnit. The tests are running on [testswarm|http://testswarm.thorsteinsson.is] that automatically gets new version on git commit. To help me test different browsers and operating systems, please go to [my testswarm|http://testswarm.thorsteinsson.is] and run the tests. 
