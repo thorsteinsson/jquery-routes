@@ -60,3 +60,4 @@ Use routeTo function to change the url or use execute function to only execute t
 Tests
 ----------
 Tests are written using QUnit. The tests are running on [testswarm|http://testswarm.thorsteinsson.is] that automatically gets new version on git commit. To help me test different browsers and operating systems, please go to [my testswarm|http://testswarm.thorsteinsson.is] and run the tests. 
+
