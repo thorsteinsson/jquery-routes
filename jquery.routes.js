@@ -25,22 +25,23 @@
 			datatypes: {
 				'int':		{
 					regexp: /\d+?/,
-					parser: function(d) { return parseInt(d); }
+					parse: function(d) { return parseInt(d); }
 				},
 				'float':	{
 					regexp: /\d+\.\d+?/,
-					parser: function(d) { return parseFloat(d); }
+					parse: function(d) { return parseFloat(d); }
 				},
 				'word':		{
 					regexp: /\w+?/
 				},
 				'date':		{
-					regexp: /(\d{1,2})\.(\d{1,2})\.(\d{4})/,
-					parser: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd); }
+					regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
+					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd); },
+					stringify: function(date) { return date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear(); }
 				},	
 				'dateend':  { 
-					regexp: /(\d{1,2})\.(\d{1,2})\.(\d{4})/,
-					parser: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); }
+					regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
+					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); }
 				}
 			},
 			// object containing all the routes by name
@@ -62,9 +63,15 @@
 				}
 			},
 			// add a route, they can be named and with default parameters
-			add: function(func, route, name, defaults) {
+			add: function(route, name, defaults, func) {
+				// parameter overload
+				if (typeof(name) === 'function') { func = name; name = undefined; }
+				if (typeof(defaults) === 'function') { func = defaults; defaults = undefined; }
+				if (typeof(name) === 'object') { defaults = name; name = undefined; }
+				
+				// all routes have a name
 				if (name === undefined) { name = 'route' + (++routecount); }
-	
+
 				var regex = /\{\s*?([a-zA-Z0-9:\|\\*\?\.]*?)\s*?\}/gim;
 				var items = ['var s="#' + route + '";'];
 				var item = route;
@@ -92,20 +99,40 @@
 					regex.lastIndex = match.index;
 				}
 				items.push('return s;');
+				
+				var getDatatype = function(parameter) {
+					for (var i = 0, len = vars.length; i < len; i++) {
+						if (vars[i][0] === parameter) {
+							return vars[i][1];
+						}
+					}
+				};
+				
+				var getArgs = function(defaults, data) {
+					var args = $.extend({}, defaults, data), dt;
+					for (var item in args) {
+						if (args.hasOwnProperty(item)) {
+							dt = $.routes.datatypes[getDatatype(item)];
+							if (dt && dt.stringify) {
+								args[item] = dt.stringify(args[item]);
+							}
+						}
+					}
+					return args;
+				};
 	
 				// add to list of routes
-				this.list[name] = {
+				return this.list[name] = {
 					name: name,
 					exp: new RegExp(routeexp, 'i'),
 					route: route,
 					func: func,
 					url: new Function('p', items.join('')),
 					routeTo: function(data) {
-						location.href = this.url($.extend({}, this.defaults, data));
+						location.href = this.url(getArgs(this.defaults, data));
 					},
 					execute: function(data) {
-						data = $.extend({}, this.defaults, data);
-						this.func.apply(data);
+						this.func.apply($.extend({}, this.defaults, data));
 					},
 					vars: vars,
 					defaults: defaults,
@@ -143,16 +170,16 @@
 					var datatype = $.routes.datatypes[vars[1]];
 					var val = args[x+1];
 					// parse parameter
-					if (datatype && datatype.parser) {
+					if (datatype && datatype.parse) {
 						val = [val];
-						// get arguments for parser
+						// get arguments for parse
 						if (datatype.regexp) {
 							var p = datatype.regexp.exec(args[x+1]);
 							for (var y = 1; y < p.length; y++) {
 								val.push(p[y]);
 							}
 						}
-						val = datatype.parser.apply(this, val);
+						val = datatype.parse.apply(this, val);
 					}
 					context[vars[0]] = val;
 				});
