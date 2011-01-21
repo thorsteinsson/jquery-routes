@@ -224,8 +224,6 @@
 			if (!route) { return; }
 
 			var linkparams = route.extract(hash);
-			console.dir(linkparams);
-			console.dir(params);
 			var newhash = route.url($.extend({}, linkparams, params));
 			item.attr('href', newhash);
 		});
