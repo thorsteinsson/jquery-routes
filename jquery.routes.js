@@ -41,7 +41,8 @@
 				},	
 				'dateend':  { 
 					regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
-					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); }
+					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
+					stringify: function(date) { return date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear(); }
 				}
 			},
 			// object containing all the routes by name
@@ -54,7 +55,7 @@
 					args = $.extend(this.current.arguments, args);
 					var url = this.current.url(args);
 					if (url !== location.hash) {
-						this.current.routeTo(args);
+						location.hash = url;
 					} else {
 						this.current.execute(args);
 					}
@@ -100,19 +101,21 @@
 				}
 				items.push('return s;');
 				
+				// find a datatype
 				var getDatatype = function(parameter) {
 					for (var i = 0, len = vars.length; i < len; i++) {
 						if (vars[i][0] === parameter) {
-							return vars[i][1];
+							return $.routes.datatypes[vars[i][1]];
 						}
 					}
 				};
-				
-				var getArgs = function(defaults, data) {
-					var args = $.extend({}, defaults, data), dt;
+
+				// prepare parameters for url
+				var getParams = function(obj) {
+					var args = $.extend({}, defaults, obj), dt;
 					for (var item in args) {
 						if (args.hasOwnProperty(item)) {
-							dt = $.routes.datatypes[getDatatype(item)];
+							dt = getDatatype(item);
 							if (dt && dt.stringify) {
 								args[item] = dt.stringify(args[item]);
 							}
@@ -120,34 +123,64 @@
 					}
 					return args;
 				};
-	
+				
+				// convert route with parameters to url
+				var combine = new Function('p', items.join(''));
+				var url = function(p) {
+					return combine(getParams(p));
+				};
+
+
+				// extract parameters from hash
+				var extract = function(hash) {
+					// load the defaults
+					var context = defaults ? defaults : {};
+					// get parameters
+					$.each(vars, function(x, vars) {
+						var datatype = $.routes.datatypes[vars[1]];
+						var val = args[x+1];
+						// parse parameter
+						if (datatype && datatype.parse) {
+							val = [val];
+							// get arguments for parse
+							if (datatype.regexp) {
+								var p = datatype.regexp.exec(args[x+1]);
+								for (var y = 1; y < p.length; y++) {
+									val.push(p[y]);
+								}
+							}
+							val = datatype.parse.apply(this, val);
+						}
+						context[vars[0]] = val;
+					});
+					return context;
+				};
+
 				// add to list of routes
 				return this.list[name] = {
 					name: name,
 					exp: new RegExp(routeexp, 'i'),
 					route: route,
 					func: func,
-					url: new Function('p', items.join('')),
+					url: url,
 					routeTo: function(data) {
-						location.href = this.url(getArgs(this.defaults, data));
+						location.href = this.url(getParams(data));
 					},
 					execute: function(data) {
-						this.func.apply($.extend({}, this.defaults, data));
+						this.func.apply($.extend({}, defaults, data));
 					},
 					vars: vars,
 					defaults: defaults,
-					level: route.length - route.replace(new RegExp("/", "g"), '').length
+					level: route.length - route.replace(new RegExp("/", "g"), '').length,
+					extract: extract
 				};
 			},
 			// get a registered route with name			
 			find: function(name) {
 				return this.list[name];
 			},
-			// load a hash and find the correct route to execute
-			load: function(hash) {
-				hash = hash.substr(1);
+			findRoute: function(hash) {
 				var route;
-				var args;
 				// search for routes
 				$.each(this.list, function(i, match) {
 					// check for a match
@@ -159,38 +192,44 @@
 						}
 					}
 				});
+				return route;
+			},
+			// load a hash and find the correct route to execute
+			load: function(hash) {
+				var route = $.routes.findRoute(hash.substr(1));
 				
 				// route not found
 				if (!route) { return; }
 				
-				// load the defaults
-				var context = route.defaults ? route.defaults : {};
-				// get parameters
-				$.each(route.vars, function(x, vars) {
-					var datatype = $.routes.datatypes[vars[1]];
-					var val = args[x+1];
-					// parse parameter
-					if (datatype && datatype.parse) {
-						val = [val];
-						// get arguments for parse
-						if (datatype.regexp) {
-							var p = datatype.regexp.exec(args[x+1]);
-							for (var y = 1; y < p.length; y++) {
-								val.push(p[y]);
-							}
-						}
-						val = datatype.parse.apply(this, val);
-					}
-					context[vars[0]] = val;
-				});
+				// extract parameters from url
+				var params = route.extract(hash);
 				
 				// execute route
 				$.routes.current = route;
-				$.routes.current.arguments = context;
-				route.execute(context);
+				$.routes.current.arguments = params;
+				route.execute(params);
 			}
 		}
 	});
+
+	$.expr[':'].hasRoute = function(elem, index, match) {
+		return $(elem).has('a[href$=' + location.hash + ']').length > 0;
+	};
+
+	$.fn.updateRoutes = function(params) {
+		$('a', this).each(function() {
+			var item = $(this),
+				hash = item.attr('href').substr(1),
+				route = $.routes.findRoute(hash);
+			if (!route) { return; }
+
+			var linkparams = route.extract(hash);
+			console.dir(linkparams);
+			console.dir(params);
+			var newhash = route.url($.extend({}, linkparams, params));
+			item.attr('href', newhash);
+		});
+	};
 
 	// Listen for hash change event
 	$(window).bind('hashchange', function() {
