@@ -48,12 +48,13 @@ jQuery(function($){
 	});
 	test("word parameter", 1, function() {
 		stop(timeout);
-		$.routes.add('/{w:word}/', 'testroute3', function() {
+		$.routes.add('/w0rd/{w:word}/', 'testroute3', function() {
 			equals( typeof(this.w), 'string', "Word converter working" );
 			start();
 		});
 		$.routes.find('testroute3').routeTo({ w: 'foo' });
 	});
+	
 	test("date parameter with default value", 4, function() {
 		stop(timeout);
 		$.routes.add('/test/{d:date}/', { d: new Date(2011,1,14) }, function() {
@@ -65,4 +66,19 @@ jQuery(function($){
 			start();
 		}).routeTo();
 	});
+	
+	test("array of integers", 4, function() {
+		stop(timeout);
+		$.routes.add('/array/{ids:intarray}/', function() {
+			equals( typeof(this.ids), typeof([]), "Array found" );
+			equals( this.ids[0], 1, "First element correct" );
+			equals( this.ids[1], 2, "Second element correct" );
+			equals( this.ids[2], 3, "Third element correct" );
+			start();
+		}).routeTo({ ids: [1, 2, 3] });
+	});
+	
+	setTimeout(function() {
+		location.hash = '';
+	}, 3000);
 });

@@ -149,7 +149,7 @@
 									val.push(p[y]);
 								}
 							}
-							val = datatype.parse.apply(this, val);
+							val = datatype.parse.apply(datatype, val);
 						}
 						context[vars[0]] = val;
 					});
@@ -164,7 +164,7 @@
 					func: func,
 					url: url,
 					routeTo: function(data) {
-						location.href = this.url(getParams(data));
+						location.href = this.url(data);
 					},
 					execute: function(data) {
 						this.func.apply($.extend({}, defaults, data));
@@ -233,6 +233,33 @@
 	$(window).bind('hashchange', function() {
 		$.routes.load(location.hash);
 	});
+	
+	// create array data types
+	var dts = $.routes.datatypes;
+	for (var name in dts) {
+		if (dts.hasOwnProperty(name)) {
+			var dt = $.routes.datatypes[name];
+			$.routes.datatypes[name + 'array'] = {
+				datatype: name,
+				regexp: new RegExp('[' + dt.regexp.toString().slice(1, dt.regexp.toString().length - 1) + '\\/\?]*', 'i'),
+				parse: function(d) { console.dir(this);
+					var arr = d.split('/'),
+						dt = $.routes.datatypes[this.datatype];
+					for (var i = 0; i < arr.length; i++) {
+						arr[i] = dt.parse(arr[i]);
+					}
+					return arr;
+				},
+				stringify: function(arr) {
+					for (var i = 0; i < arr.length; i++) {
+						var dt = $.routes.datatypes[this.datatype];
+						arr[i] = (dt.stringify ? dt.stringify(arr[i]) : arr[i].toString());
+					}
+					return arr.join('/');
+				}
+			};
+		}
+	}
 	
 	// Run route on document ready
 	$(function() {
