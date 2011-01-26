@@ -22,16 +22,16 @@ Link routes to javascript functions. Make sure the functions prepare the ui for 
 		}
 	};
 	
-	$.routes.add(newsModule.fetch, '/news/{id:int}/');
-	$.routes.add(newsModule.fetchAll, '/news/');
+	$.routes.add('/news/{id:int}/', newsModule.fetch);
+	$.routes.add('/news/', newsModule.fetchAll);
 	</script>
 
 or anonymous functions
 
 	<script type="text/javascript">
-	$.routes.add(function() {
+	$.routes.add('/news/{id:int}/', function() {
 		$('#news').load('news.php?id=' + this.id).show();
-	}, '/news/{id:int}/');
+	});
 	</script>
 
 Parameters are defined with curly braces. The syntax is {name:datatype}. The datatype can be int, float, word, date or you can create your own.
@@ -43,9 +43,9 @@ Named routes
 
 	<script type="text/javascript">
 	// register the route
-	$.routes.add(function() {
+	$.routes.add('/news/{when:date}/', 'newsByDate', function() {
 		alert('loading news from ' + this.when);
-	}, '/news/{when:date}/', 'newsByDate');
+	});
 	
 	$('#get-news').click(function() {
 		// change the url to this route (with this date as parameter)
