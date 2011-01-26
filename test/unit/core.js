@@ -69,13 +69,27 @@ jQuery(function($){
 	
 	test("array of integers", 4, function() {
 		stop(timeout);
-		$.routes.add('/array/{ids:intarray}/', function() {
+		$.routes.add('/array/int/{ids:intarray}/', function() {
 			equals( typeof(this.ids), typeof([]), "Array found" );
 			equals( this.ids[0], 1, "First element correct" );
 			equals( this.ids[1], 2, "Second element correct" );
 			equals( this.ids[2], 3, "Third element correct" );
 			start();
 		}).routeTo({ ids: [1, 2, 3] });
+	});
+	
+	test("array of dates", 7, function() {
+		stop(timeout);
+		$.routes.add('/array/date/{ids:datearray}/', function() {
+			equals( typeof(this.ids), typeof([]), "Array found" );
+			equals( this.ids[0].getFullYear(), 2011, "Correct year" );
+			equals( this.ids[0].getMonth(), 0, "Correct month" );
+			equals( this.ids[0].getDate(), 1, "Correct day" );
+			equals( this.ids[1].getFullYear(), 2010, "Correct year" );
+			equals( this.ids[1].getMonth(), 11, "Correct month" );
+			equals( this.ids[1].getDate(), 24, "Correct day" );
+			start();
+		}).routeTo({ ids: [new Date(2011, 0, 1), new Date(2010, 11, 24)] });
 	});
 	
 	setTimeout(function() {

@@ -242,18 +242,20 @@
 			$.routes.datatypes[name + 'array'] = {
 				datatype: name,
 				regexp: new RegExp('[' + dt.regexp.toString().slice(1, dt.regexp.toString().length - 1) + '\\/\?]*', 'i'),
-				parse: function(d) { console.dir(this);
+				parse: function(d) {
 					var arr = d.split('/'),
 						dt = $.routes.datatypes[this.datatype];
 					for (var i = 0; i < arr.length; i++) {
-						arr[i] = dt.parse(arr[i]);
+						var groups = dt.regexp.exec(arr[i]).slice(1);
+						var args = [arr[i]].concat(groups);
+						arr[i] = dt.parse.apply(dt, args);
 					}
 					return arr;
 				},
 				stringify: function(arr) {
 					for (var i = 0; i < arr.length; i++) {
 						var dt = $.routes.datatypes[this.datatype];
-						arr[i] = (dt.stringify ? dt.stringify(arr[i]) : arr[i].toString());
+						arr[i] = (!!dt.stringify ? dt.stringify(arr[i]) : arr[i].toString());
 					}
 					return arr.join('/');
 				}
