@@ -19,13 +19,17 @@
  */
 (function($) {
 	var routecount = 0;
+	var datelpad = function(d) {
+		d = d + '';
+		return d.length < 2 ? '0' + d : d;
+	}
 	$.extend({
 		routes: {
 			// datatypes for parameters, regexp groups are passed as parameters to parsers
 			datatypes: {
 				'int':		{
 					regexp: /\d+?/,
-					parse: function(d) { return parseInt(d); }
+					parse: function(d) { return parseInt(d, 10); }
 				},
 				'float':	{
 					regexp: /\d+\.\d+?/,
@@ -35,14 +39,16 @@
 					regexp: /\w+?/
 				},
 				'date':		{
-					regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
+					regexp: /(\d{2})\-(\d{2})\-(\d{4})/,
 					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd); },
-					stringify: function(date) { return date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear(); }
+					stringify: function(date) {
+						return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear();
+					}
 				},	
 				'dateend':  { 
-					regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
+					regexp: /(\d{2})\-(\d{2})\-(\d{4})/,
 					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
-					stringify: function(date) { return date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear(); }
+					stringify: function(date) { return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear(); }
 				}
 			},
 			// object containing all the routes by name
@@ -175,6 +181,10 @@
 					extract: extract
 				};
 			},
+			addDataType: function(name, dt) {
+				$.routes.datatypes[name] = dt;
+				createDatatypeArray(name);
+			},
 			// get a registered route with name			
 			find: function(name) {
 				return this.list[name];
@@ -229,39 +239,44 @@
 		});
 	};
 
-	// Listen for hash change event
-	$(window).bind('hashchange', function() {
-		$.routes.load(location.hash);
-	});
+	function createDatatypeArray(name) {
+		var dt = $.routes.datatypes[name];
+		$.routes.datatypes[name + 'array'] = {
+			datatype: name,
+			regexp: new RegExp('[' + dt.regexp.toString().slice(1, dt.regexp.toString().length - 1) + '\\/\?]*', 'i'),
+			parse: function(d) {
+				var arr = d.split('/'),
+					newarr = [],
+					dt = $.routes.datatypes[this.datatype];
+				for (var i = 0; i < arr.length; i++) {
+					var groups = dt.regexp.exec(arr[i]).slice(1);
+					var args = [arr[i]].concat(groups);
+					newarr.push(dt.parse.apply(dt, args));
+				}
+				return newarr;
+			},
+			stringify: function(arr) {
+				for (var i = 0; i < arr.length; i++) {
+					var dt = $.routes.datatypes[this.datatype];
+					arr[i] = (!!dt.stringify ? dt.stringify(arr[i]) : arr[i].toString());
+				}
+				return arr.join('/');
+			}
+		};
+	}
 	
 	// create array data types
 	var dts = $.routes.datatypes;
 	for (var name in dts) {
 		if (dts.hasOwnProperty(name)) {
-			var dt = $.routes.datatypes[name];
-			$.routes.datatypes[name + 'array'] = {
-				datatype: name,
-				regexp: new RegExp('[' + dt.regexp.toString().slice(1, dt.regexp.toString().length - 1) + '\\/\?]*', 'i'),
-				parse: function(d) {
-					var arr = d.split('/'),
-						dt = $.routes.datatypes[this.datatype];
-					for (var i = 0; i < arr.length; i++) {
-						var groups = dt.regexp.exec(arr[i]).slice(1);
-						var args = [arr[i]].concat(groups);
-						arr[i] = dt.parse.apply(dt, args);
-					}
-					return arr;
-				},
-				stringify: function(arr) {
-					for (var i = 0; i < arr.length; i++) {
-						var dt = $.routes.datatypes[this.datatype];
-						arr[i] = (!!dt.stringify ? dt.stringify(arr[i]) : arr[i].toString());
-					}
-					return arr.join('/');
-				}
-			};
+			createDatatypeArray(name);
 		}
 	}
+
+	// Listen for hash change event
+	$(window).bind('hashchange', function() {
+		$.routes.load(location.hash);
+	});
 	
 	// Run route on document ready
 	$(function() {
