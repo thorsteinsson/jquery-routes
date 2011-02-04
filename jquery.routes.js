@@ -38,6 +38,9 @@
 				'word':		{
 					regexp: /\w+?/
 				},
+				'string':	{
+					regexp: /\w+?/
+				},
 				'date':		{
 					regexp: /(\d{2})\-(\d{2})\-(\d{4})/,
 					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd); },
@@ -185,7 +188,7 @@
 				$.routes.datatypes[name] = dt;
 				createDatatypeArray(name);
 			},
-			// get a registered route with name			
+			// get a registered route with name
 			find: function(name) {
 				return this.list[name];
 			},
