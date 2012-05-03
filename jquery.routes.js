@@ -269,7 +269,7 @@
 	}
 	
 	// create array data types
-	var dts = $.routes.datatypes;
+	var dts = $.extend({},$.routes.datatypes);
 	for (var name in dts) {
 		if (dts.hasOwnProperty(name)) {
 			createDatatypeArray(name);
