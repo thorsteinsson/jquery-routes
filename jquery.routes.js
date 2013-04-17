@@ -1,14 +1,4 @@
 ﻿/*
- * jQuery hashchange event - v1.2 - 2/11/2010
- * http://benalman.com/projects/jquery-hashchange-plugin/
- * 
- * Copyright (c) 2010 "Cowboy" Ben Alman
- * Dual licensed under the MIT and GPL licenses.
- * http://benalman.com/about/license/
- */
-(function($,i,b){var j,k=$.event.special,c="location",d="hashchange",l="href",f=$.browser,g=document.documentMode,h=f.msie&&(g===b||g<8),e="on"+d in i&&!h;function a(m){m=m||i[c][l];return m.replace(/^[^#]*#?(.*)$/,"$1")}$[d+"Delay"]=100;k[d]=$.extend(k[d],{setup:function(){if(e){return false}$(j.start)},teardown:function(){if(e){return false}$(j.stop)}});j=(function(){var m={},r,n,o,q;function p(){o=q=function(s){return s};if(h){n=$('<iframe src="javascript:0"/>').hide().insertAfter("body")[0].contentWindow;q=function(){return a(n.document[c][l])};o=function(u,s){if(u!==s){var t=n.document;t.open().close();t[c].hash="#"+u}};o(a())}}m.start=function(){if(r){return}var t=a();o||p();(function s(){var v=a(),u=q(t);if(v!==t){o(t=v,u);$(i).trigger(d)}else{if(u!==t){i[c][l]=i[c][l].replace(/#.*/,"")+"#"+u}}r=setTimeout(s,$[d+"Delay"])})()};m.stop=function(){if(!n){r&&clearTimeout(r);r=0}};return m})()})(jQuery,this);
-
-/*
  * jQuery routes - v1.0
  * Routing in javascript using hashchange event.
  * http://thorsteinsson.is/projects/jquery-routes/
@@ -47,8 +37,8 @@
 					stringify: function(date) {
 						return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear();
 					}
-				},	
-				'dateend':  { 
+				},
+				'dateend':  {
 					regexp: /(\d{2})\-(\d{2})\-(\d{4})/,
 					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
 					stringify: function(date) { return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear(); }
@@ -78,7 +68,7 @@
 				if (typeof(name) === 'function') { func = name; name = undefined; }
 				if (typeof(defaults) === 'function') { func = defaults; defaults = undefined; }
 				if (typeof(name) === 'object') { defaults = name; name = undefined; }
-				
+
 				// all routes have a name
 				if (name === undefined) { name = 'route' + (++routecount); }
 
@@ -87,7 +77,7 @@
 				var item = route;
 				var routeexp = '^' + route;
 				var vars = [];
-				
+
 				// find parameters in route and create a regexp
 				while (match = regex.exec(item)) {
 					var arr = match[1].split(':');
@@ -109,7 +99,7 @@
 					regex.lastIndex = match.index;
 				}
 				items.push('return s;');
-				
+
 				// find a datatype
 				var getDatatype = function(parameter) {
 					for (var i = 0, len = vars.length; i < len; i++) {
@@ -132,7 +122,7 @@
 					}
 					return args;
 				};
-				
+
 				// convert route with parameters to url
 				var combine = new Function('p', items.join(''));
 				var url = function(p) {
@@ -210,13 +200,13 @@
 			// load a hash and find the correct route to execute
 			load: function(hash) {
 				var route = $.routes.findRoute(hash.substr(1));
-				
+
 				// route not found
 				if (!route) { return; }
-				
+
 				// extract parameters from url
 				var params = route.extract(hash);
-				
+
 				// execute route
 				$.routes.current = route;
 				$.routes.current.arguments = params;
@@ -267,7 +257,7 @@
 			}
 		};
 	}
-	
+
 	// create array data types
 	var dts = $.extend({},$.routes.datatypes);
 	for (var name in dts) {
@@ -280,7 +270,7 @@
 	$(window).bind('hashchange', function() {
 		$.routes.load(location.hash);
 	});
-	
+
 	// Run route on document ready
 	$(function() {
 		if (location.hash.length > 0) {
