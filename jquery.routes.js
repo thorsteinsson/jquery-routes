@@ -1,5 +1,5 @@
 ﻿/*
- * jQuery routes - v1.0
+ * jQuery routes - v2.0
  * Routing in javascript using hashchange event.
  * http://thorsteinsson.is/projects/jquery-routes/
  *
@@ -9,10 +9,6 @@
  */
 (function($) {
 	var routecount = 0;
-	var datelpad = function(d) {
-		d = d + '';
-		return d.length < 2 ? '0' + d : d;
-	}
 	$.extend({
 		routes: {
 			// datatypes for parameters, regexp groups are passed as parameters to parsers
@@ -31,17 +27,30 @@
 				'string':	{
 					regexp: /\w+?/
 				},
-				'date':		{
-					regexp: /(\d{2})\-(\d{2})\-(\d{4})/,
-					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd); },
+				'datetime':		{
+					regexp: /(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})/,
+					parse: function(d, yyyy, mm, dd) { 
+						return new Date(yyyy, mm - 1, dd); 
+					},
 					stringify: function(date) {
-						return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear();
+						return date.toISOString();
+					}
+				},
+				'date':		{
+					regexp: /(\d{4})\-(\d{1,2})\-(\d{1,2})/,
+					parse: function(d, yyyy, mm, dd) { 
+						return new Date(yyyy, mm - 1, dd); 
+					},
+					stringify: function(date) {
+						return date.toISOString().split('T')[0];
 					}
 				},
 				'dateend':  {
-					regexp: /(\d{2})\-(\d{2})\-(\d{4})/,
-					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
-					stringify: function(date) { return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear(); }
+					regexp: /(\d{4})\-(\d{1,2})\-(\d{1,2})/,
+					parse: function(d, yyyy, mm, dd) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
+					stringify: function(date) { 
+						return date.toISOString().split('T')[0];
+					}
 				}
 			},
 			// object containing all the routes by name

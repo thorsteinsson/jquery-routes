@@ -1,46 +1,61 @@
 jQuery(function($){
-	var timeout = 3000;
+	var timeout = 1000;
 
 	test("call a simple route", 3, function() {
 		stop(timeout);
 		$.routes.add('/route', 'simple', function() {
 			ok(true, 'Route was called');
+			start();
 		});
 		
 		$.routes.find('simple').routeTo();
-		window.location.hash = '#/route';
-		window.location.hash = '#/route/';
 		
-		start();
+		stop(timeout);
+		window.location.hash = '#/route';
+		
+		stop(timeout);
+		window.location.hash = '#/route/';	
 	});
 
 	test("call a route with param", 1, function() {
 		stop(timeout);
-		$.routes.add('/{param:test}/', 'testroute1', function() {
+		$.routes.add('/{param}:test/', 'param', function() {
 			equals( this.param, "test", "We got the correct parameter" );
 			start();	
 		});
-		$.routes.find('testroute1').routeTo({ param: 'test' });
+		$.routes.find('param').routeTo({ param: 'test' });
 	});
 	
-	test("date parameter", 2, function() {
+	test("date parameter", 10, function() {
 		stop(timeout);
-		$.routes.add('/{d:date}/', 'testroute2', function() {
+		$.routes.add('/{d:date}', 'date', function() {
 			equals( typeof(this.d), 'object', "Date converter working" );
-			equals( this.d.toString(), new Date(2001, 1, 1).toString(), "Date value correct" );
+			equals( this.d.toString(), new Date(2001, 0, 1).toString(), "Date value correct" );
 			start();
 		});
-		$.routes.find('testroute2').routeTo({ d: new Date(2001, 1, 1) });
+		$.routes.find('date').routeTo({ d: new Date(2001, 0, 1) });
+		
+		stop(timeout);
+		window.location.hash = '#/2001-01-01';
+		
+		stop(timeout);
+		window.location.hash = '#/2001-01-01/';
+		
+		stop(timeout);
+		window.location.hash = '#/2001-1-1';
+		
+		stop(timeout);
+		window.location.hash = '#/2001-1-1/';
 	});
 	
 	test("int parameter", 2, function() {
 		stop(timeout);
-		$.routes.add('/{i:int}/', 'testroute4', function() {
+		$.routes.add('/{i:int}/', 'int', function() {
 			equals( typeof(this.i), 'number', "Int converter working" );
 			equals( this.i, 2, "Int value correct" );
 			start();
 		});
-		$.routes.find('testroute4').routeTo({ i: 2 });
+		$.routes.find('int').routeTo({ i: 2 });
 	});
 	
 	test("float parameter", 2, function() {
