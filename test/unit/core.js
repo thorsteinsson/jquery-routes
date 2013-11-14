@@ -34,28 +34,53 @@ jQuery(function($){
 	
 	test('date parameter', 10, function() {
 		stop(timeout);
+		$.routes.useIsoDates(true);
 		$.routes.add('/date/{d:date}', 'date', function() {
 			equals( typeof(this.d), 'object', 'Date converter working' );
-			equals( this.d.toString(), new Date(2001, 0, 1).toString(), 'Date value correct' );
+			equals( this.d.toString(), new Date(2001, 1, 1).toString(), 'Date value correct' );
 			start();
 		});
-		$.routes.find('date').routeTo({ d: new Date(2001, 0, 1) });
+		$.routes.find('date').routeTo({ d: new Date(2001, 1, 1) });
 		
 		stop(timeout);
-		window.location.hash = '#/date/2001-01-01';
+		window.location.hash = '#/date/2001-02-01';
 		
 		stop(timeout);
-		window.location.hash = '#/date/2001-01-01/';
+		window.location.hash = '#/date/2001-02-01/';
 		
 		stop(timeout);
-		window.location.hash = '#/date/2001-1-1';
+		window.location.hash = '#/date/2001-2-1';
 		
 		stop(timeout);
-		window.location.hash = '#/date/2001-1-1/';
+		window.location.hash = '#/date/2001-2-1/';
+	});
+	
+	test('legacy date parameter', 10, function() {
+		stop(timeout);
+		$.routes.useIsoDates(false);
+		$.routes.add('/legacydate/{d:date}', 'legacydate', function() {
+			equals( typeof(this.d), 'object', 'Date converter working' );
+			equals( this.d.toString(), new Date(2001, 1, 1).toString(), 'Date value correct' );
+			start();
+		});
+		$.routes.find('legacydate').routeTo({ d: new Date(2001, 1, 1) });
+		
+		stop(timeout);
+		window.location.hash = '#/legacydate/01-02-2001';
+		
+		stop(timeout);
+		window.location.hash = '#/legacydate/01-02-2001/';
+		
+		stop(timeout);
+		window.location.hash = '#/legacydate/1-2-2001';
+		
+		stop(timeout);
+		window.location.hash = '#/legacydate/1-2-2001/';
 	});
 	
 	test('datetime parameter', 6, function() {
 		stop(timeout);
+		$.routes.useIsoDates(true);
 		$.routes.add('/datetime/{d:datetime}', 'datetime', function() {
 			equals( typeof(this.d), 'object', 'Date converter working' );
 			equals( this.d.toISOString(), new Date(1980, 0, 28, 23, 5, 55, 750).toISOString(), 'Date value correct' );
@@ -119,6 +144,7 @@ jQuery(function($){
 	
 	test('date parameter with default value', 12, function() {
 		stop(timeout);
+		$.routes.useIsoDates(true);
 		$.routes.add('/default/{d:date}', 'default', { d: new Date(2011,1,14) }, function() {
 			equals( typeof(this.d), 'object', 'Object found' );
 			var correctDate = new Date(2011,1,14);
@@ -157,6 +183,7 @@ jQuery(function($){
 	
 	test('array of dates', 21, function() {
 		stop(timeout);
+		$.routes.useIsoDates(true);
 		$.routes.add('/array/date/{d:datearray}', 'dates', function() {
 			equals( typeof(this.d), typeof([]), 'Array found' );
 			equals( this.d[0].getFullYear(), 2011, 'Correct year' );

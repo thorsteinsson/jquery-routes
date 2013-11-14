@@ -8,9 +8,63 @@
  * http://creativecommons.org/licenses/by/3.0/
  */
 (function($) {
-	var routecount = 0;
-	$.extend({
+	var routecount = 0,
+		datelpad = function(d) {
+			d = d + '';
+			return d.length < 2 ? '0' + d : d;
+		},
+		legacyDateTypes = {
+			'date':		{
+				regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
+				parse: function(d, dd, mm, yyyy) { 
+					return new Date(yyyy, datelpad(mm - 1), datelpad(dd)); 
+				},
+				stringify: function(date) {
+					return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear();
+				}
+			},
+			'dateend':  {
+				regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
+				parse: function(d, dd, mm, yyyy) { 
+					return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); 
+				},
+				stringify: function(date) { 
+					return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear();
+				}
+			}
+		},
+		isoDateTypes = {
+			'date':		{
+				regexp: /(\d{4})\-(\d{1,2})\-(\d{1,2})/,
+				parse: function(d, yyyy, mm, dd) { 
+					return new Date(yyyy, mm - 1, dd); 
+				},
+				stringify: function(date) {
+					return date.toISOString().split('T')[0];
+				}
+			},
+			'dateend':  {
+				regexp: /(\d{4})\-(\d{1,2})\-(\d{1,2})/,
+				parse: function(d, yyyy, mm, dd) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
+				stringify: function(date) { 
+					return date.toISOString().split('T')[0];
+				}
+			}
+		};
+
+	$.extend({		
 		routes: {
+			useIsoDates: function(iso){
+				if(iso === true){
+					this.datatypes.date = isoDateTypes.date;
+					this.datatypes.dateend = isoDateTypes.dateend;
+				}
+				else {
+					this.datatypes.date = legacyDateTypes.date;
+					this.datatypes.dateend = legacyDateTypes.dateend;
+				}
+			},
+		
 			// datatypes for parameters, regexp groups are passed as parameters to parsers
 			datatypes: {
 				'int':		{
@@ -36,22 +90,8 @@
 						return date.toISOString();
 					}
 				},
-				'date':		{
-					regexp: /(\d{4})\-(\d{1,2})\-(\d{1,2})/,
-					parse: function(d, yyyy, mm, dd) { 
-						return new Date(yyyy, mm - 1, dd); 
-					},
-					stringify: function(date) {
-						return date.toISOString().split('T')[0];
-					}
-				},
-				'dateend':  {
-					regexp: /(\d{4})\-(\d{1,2})\-(\d{1,2})/,
-					parse: function(d, yyyy, mm, dd) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
-					stringify: function(date) { 
-						return date.toISOString().split('T')[0];
-					}
-				}
+				'date':	isoDateTypes.date,
+				'dateend': isoDateTypes.dateend
 			},
 			// object containing all the routes by name
 			list: {},
