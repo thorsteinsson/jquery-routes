@@ -1,13 +1,17 @@
 jQuery(function($){
 	var timeout = 3000;
 
-	test("call a simple route", 1, function() {
+	test("call a simple route", 3, function() {
 		stop(timeout);
-		$.routes.add('/route/', function() {
-			ok(true, "Route was called");
-			start();
+		$.routes.add('/route', 'simple', function() {
+			ok(true, 'Route was called');
 		});
-		$.routes.find('route1').routeTo();
+		
+		$.routes.find('simple').routeTo();
+		window.location.hash = '#/route';
+		window.location.hash = '#/route/';
+		
+		start();
 	});
 
 	test("call a route with param", 1, function() {
@@ -28,6 +32,7 @@ jQuery(function($){
 		});
 		$.routes.find('testroute2').routeTo({ d: new Date(2001, 1, 1) });
 	});
+	
 	test("int parameter", 2, function() {
 		stop(timeout);
 		$.routes.add('/{i:int}/', 'testroute4', function() {
@@ -37,6 +42,7 @@ jQuery(function($){
 		});
 		$.routes.find('testroute4').routeTo({ i: 2 });
 	});
+	
 	test("float parameter", 2, function() {
 		stop(timeout);
 		$.routes.add('/{f:float}/', 'testroute5', function() {
@@ -46,6 +52,7 @@ jQuery(function($){
 		});
 		$.routes.find('testroute5').routeTo({ f: 3.23 });
 	});
+	
 	test("word parameter", 1, function() {
 		stop(timeout);
 		$.routes.add('/w0rd/{w:word}/', 'testroute3', function() {

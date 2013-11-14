@@ -71,7 +71,8 @@
 
 				// all routes have a name
 				if (name === undefined) { name = 'route' + (++routecount); }
-
+				if (route[route.length - 1] !== '/') { route += '/'; }
+				
 				var regex = /\{\s*?([a-zA-Z0-9:\|\\*\?\.]*?)\s*?\}/gim;
 				var items = ['var s="#' + route + '";'];
 				var item = route;
@@ -273,8 +274,12 @@
 
 	// Run route on document ready
 	$(function() {
-		if (location.hash.length > 0) {
-			$.routes.load(location.hash);
+		var hash = location.hash;
+		if (hash.length > 0) {
+			if(hash[hash.length-1] !== '/'){
+				hash += '/';
+			}
+			$.routes.load(hash);
 		}
 	});
 }(jQuery));
