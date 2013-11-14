@@ -103,10 +103,14 @@
 							constraint = constraint.replace(/\/$|^\//g, ''); // Wrapping slashes
 							constraint = constraint.replace(/[\(\)]/g, ''); // Remove groups
 						}
-						routeexp = routeexp.replace(match[0], '(' + constraint + ')');
+						constraint = '(' + constraint + ')';
 					} else {
-						routeexp = routeexp.replace(match[0], '(.*?)');
+						constraint = '(.*?)';
 					}
+					if(defaults && defaults[first]) {
+						constraint += '?'; // If there is a default, make parameter optional
+					}
+					routeexp = routeexp.replace(match[0], constraint);
 					vars.push(match[1].split(':'));
 					regex.lastIndex = match.index;
 				}
@@ -141,7 +145,6 @@
 					return combine(getParams(p));
 				};
 
-
 				// extract parameters from hash
 				var extract = function(hash) {
 					// load the defaults
@@ -155,7 +158,7 @@
 							val = [val];
 							// get arguments for parse
 							if (datatype.regexp) {
-								var p = datatype.regexp.exec(args[x+1]);
+								var p = datatype.regexp.exec(args[x+1] || datatype.stringify(defaults[vars[x]]));
 								for (var y = 1; y < p.length; y++) {
 									val.push(p[y]);
 								}

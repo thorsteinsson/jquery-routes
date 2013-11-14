@@ -17,13 +17,19 @@ jQuery(function($){
 		window.location.hash = '#/route/';	
 	});
 
-	test('call a route with param', 1, function() {
+	test('call a route with param', 3, function() {
 		stop(timeout);
-		$.routes.add('/{param}:test/', 'param', function() {
+		$.routes.add('/param/{param}', 'param', function() {
 			equals( this.param, 'test', 'We got the correct parameter' );
 			start();	
 		});
 		$.routes.find('param').routeTo({ param: 'test' });
+		
+		stop(timeout);
+		window.location.hash = '#/param/test';
+		
+		stop(timeout);
+		window.location.hash = '#/param/test/';
 	});
 	
 	test('date parameter', 10, function() {
@@ -66,7 +72,7 @@ jQuery(function($){
 	
 	test('int parameter', 6, function() {
 		stop(timeout);
-		$.routes.add('/{i:int}', 'int', function() {
+		$.routes.add('/int/{i:int}', 'int', function() {
 			equals( typeof(this.i), 'number', 'Int converter working' );
 			equals( this.i, 2, 'Int value correct' );
 			start();
@@ -74,15 +80,15 @@ jQuery(function($){
 		$.routes.find('int').routeTo({ i: 2 });
 		
 		stop(timeout);
-		window.location.hash = '#/2';
+		window.location.hash = '#/int/2';
 		
 		stop(timeout);
-		window.location.hash = '#/2/';
+		window.location.hash = '#/int/2/';
 	});
 	
 	test('float parameter', 6, function() {
 		stop(timeout);
-		$.routes.add('/{f:float}', 'float', function() {
+		$.routes.add('/float/{f:float}', 'float', function() {
 			equals( typeof(this.f), 'number', 'Float converter working' );
 			equals( this.f, 3.23, 'Float value correct' );
 			start();
@@ -90,30 +96,30 @@ jQuery(function($){
 		$.routes.find('float').routeTo({ f: 3.23 });
 		
 		stop(timeout);
-		window.location.hash = '#/3.23';
+		window.location.hash = '#/float/3.23';
 		
 		stop(timeout);
-		window.location.hash = '#/3.23/';
+		window.location.hash = '#/float/3.23/';
 	});
 	
 	test('word parameter', 3, function() {
 		stop(timeout);
-		$.routes.add('/w0rd/{w:word}', 'word', function() {
+		$.routes.add('/word/{w:word}', 'word', function() {
 			equals( typeof(this.w), 'string', 'Word converter working' );
 			start();
 		});
 		$.routes.find('word').routeTo({ w: 'foo' });
 		
 		stop(timeout);
-		window.location.hash = '#/w0rd/foo';
+		window.location.hash = '#/word/foo';
 		
 		stop(timeout);
-		window.location.hash = '#/w0rd/foo/';
+		window.location.hash = '#/word/foo/';
 	});
 	
-	test('date parameter with default value', 4, function() {
+	test('date parameter with default value', 12, function() {
 		stop(timeout);
-		$.routes.add('/test/{d:date}', 'default', { d: new Date(2011,1,14) }, function() {
+		$.routes.add('/default/{d:date}', 'default', { d: new Date(2011,1,14) }, function() {
 			equals( typeof(this.d), 'object', 'Object found' );
 			var correctDate = new Date(2011,1,14);
 			equals( this.d.getFullYear(), correctDate.getFullYear(), 'Correct year' );
@@ -123,6 +129,12 @@ jQuery(function($){
 		});
 		
 		$.routes.find('default').routeTo();
+			
+		stop(timeout);
+		window.location.hash = '#/default/';
+		
+		stop(timeout);
+		window.location.hash = '#/default//';
 	});
 	
 	test('array of integers', 12, function() {
