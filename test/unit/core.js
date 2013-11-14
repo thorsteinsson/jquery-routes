@@ -28,7 +28,7 @@ jQuery(function($){
 	
 	test("date parameter", 10, function() {
 		stop(timeout);
-		$.routes.add('/{d:date}', 'date', function() {
+		$.routes.add('/date/{d:date}', 'date', function() {
 			equals( typeof(this.d), 'object', "Date converter working" );
 			equals( this.d.toString(), new Date(2001, 0, 1).toString(), "Date value correct" );
 			start();
@@ -36,82 +36,133 @@ jQuery(function($){
 		$.routes.find('date').routeTo({ d: new Date(2001, 0, 1) });
 		
 		stop(timeout);
-		window.location.hash = '#/2001-01-01';
+		window.location.hash = '#/date/2001-01-01';
 		
 		stop(timeout);
-		window.location.hash = '#/2001-01-01/';
+		window.location.hash = '#/date/2001-01-01/';
 		
 		stop(timeout);
-		window.location.hash = '#/2001-1-1';
+		window.location.hash = '#/date/2001-1-1';
 		
 		stop(timeout);
-		window.location.hash = '#/2001-1-1/';
+		window.location.hash = '#/date/2001-1-1/';
 	});
 	
-	test("int parameter", 2, function() {
+	test("datetime parameter", 6, function() {
 		stop(timeout);
-		$.routes.add('/{i:int}/', 'int', function() {
+		$.routes.add('/datetime/{d:datetime}', 'datetime', function() {
+			equals( typeof(this.d), 'object', "Date converter working" );
+			equals( this.d.toISOString(), new Date(1980, 0, 28, 23, 5, 55, 750).toISOString(), "Date value correct" );
+			start();
+		});
+		$.routes.find('datetime').routeTo({ d: new Date(1980, 0, 28, 23, 5, 55, 750) });
+		
+		stop(timeout);
+		window.location.hash = '#/datetime/1980-01-28T23:05:55.750Z';
+		
+		stop(timeout);
+		window.location.hash = '#/datetime/1980-01-28T23:05:55.750Z/';
+	});
+	
+	test("int parameter", 6, function() {
+		stop(timeout);
+		$.routes.add('/{i:int}', 'int', function() {
 			equals( typeof(this.i), 'number', "Int converter working" );
 			equals( this.i, 2, "Int value correct" );
 			start();
 		});
 		$.routes.find('int').routeTo({ i: 2 });
+		
+		stop(timeout);
+		window.location.hash = '#/2';
+		
+		stop(timeout);
+		window.location.hash = '#/2/';
 	});
 	
-	test("float parameter", 2, function() {
+	test("float parameter", 6, function() {
 		stop(timeout);
-		$.routes.add('/{f:float}/', 'testroute5', function() {
+		$.routes.add('/{f:float}', 'float', function() {
 			equals( typeof(this.f), 'number', "Float converter working" );
 			equals( this.f, 3.23, "Float value correct" );
 			start();
 		});
-		$.routes.find('testroute5').routeTo({ f: 3.23 });
+		$.routes.find('float').routeTo({ f: 3.23 });
+		
+		stop(timeout);
+		window.location.hash = '#/3.23';
+		
+		stop(timeout);
+		window.location.hash = '#/3.23/';
 	});
 	
-	test("word parameter", 1, function() {
+	test("word parameter", 3, function() {
 		stop(timeout);
-		$.routes.add('/w0rd/{w:word}/', 'testroute3', function() {
+		$.routes.add('/w0rd/{w:word}', 'word', function() {
 			equals( typeof(this.w), 'string', "Word converter working" );
 			start();
 		});
-		$.routes.find('testroute3').routeTo({ w: 'foo' });
+		$.routes.find('word').routeTo({ w: 'foo' });
+		
+		stop(timeout);
+		window.location.hash = '#/w0rd/foo';
+		
+		stop(timeout);
+		window.location.hash = '#/w0rd/foo/';
 	});
 	
 	test("date parameter with default value", 4, function() {
 		stop(timeout);
-		$.routes.add('/test/{d:date}/', { d: new Date(2011,1,14) }, function() {
+		$.routes.add('/test/{d:date}', 'default', { d: new Date(2011,1,14) }, function() {
 			equals( typeof(this.d), 'object', "Object found" );
 			var correctDate = new Date(2011,1,14);
 			equals( this.d.getFullYear(), correctDate.getFullYear(), "Correct year" );
 			equals( this.d.getMonth(), correctDate.getMonth(), "Correct month" );
 			equals( this.d.getDate(), correctDate.getDate(), "Correct day" );
 			start();
-		}).routeTo();
+		});
+		
+		$.routes.find('default').routeTo();
 	});
 	
-	test("array of integers", 4, function() {
+	test("array of integers", 12, function() {
 		stop(timeout);
-		$.routes.add('/array/int/{ids:intarray}/', function() {
+		$.routes.add('/array/int/{ids:intarray}', 'intarray', function() {
 			equals( typeof(this.ids), typeof([]), "Array found" );
 			equals( this.ids[0], 1, "First element correct" );
 			equals( this.ids[1], 2, "Second element correct" );
 			equals( this.ids[2], 3, "Third element correct" );
 			start();
-		}).routeTo({ ids: [1, 2, 3] });
+		});
+		$.routes.find('intarray').routeTo({ ids: [1, 2, 3] });
+		
+		stop(timeout);
+		window.location.hash = '#/array/int/[1/2/3';
+		
+		stop(timeout);
+		window.location.hash = '#/array/int/1/2/3/';
 	});
 	
-	test("array of dates", 7, function() {
+	test("array of dates", 21, function() {
 		stop(timeout);
-		$.routes.add('/array/date/{ids:datearray}/', function() {
-			equals( typeof(this.ids), typeof([]), "Array found" );
-			equals( this.ids[0].getFullYear(), 2011, "Correct year" );
-			equals( this.ids[0].getMonth(), 0, "Correct month" );
-			equals( this.ids[0].getDate(), 1, "Correct day" );
-			equals( this.ids[1].getFullYear(), 2010, "Correct year" );
-			equals( this.ids[1].getMonth(), 11, "Correct month" );
-			equals( this.ids[1].getDate(), 24, "Correct day" );
+		$.routes.add('/array/date/{d:datearray}', 'dates', function() {
+			equals( typeof(this.d), typeof([]), "Array found" );
+			equals( this.d[0].getFullYear(), 2011, "Correct year" );
+			equals( this.d[0].getMonth(), 0, "Correct month" );
+			equals( this.d[0].getDate(), 1, "Correct day" );
+			equals( this.d[1].getFullYear(), 2010, "Correct year" );
+			equals( this.d[1].getMonth(), 11, "Correct month" );
+			equals( this.d[1].getDate(), 24, "Correct day" );
 			start();
-		}).routeTo({ ids: [new Date(2011, 0, 1), new Date(2010, 11, 24)] });
+		});
+		
+		$.routes.find('dates').routeTo({ d: [new Date(2011, 0, 1), new Date(2010, 11, 24)] });
+		
+		stop(timeout);
+		window.location.hash = '#/array/date/2011-01-01/2010-12-24';
+		
+		stop(timeout);
+		window.location.hash = '#/array/date/2011-01-01/2010-12-24/';
 	});
 	
 	setTimeout(function() {

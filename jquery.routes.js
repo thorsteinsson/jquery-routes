@@ -28,9 +28,9 @@
 					regexp: /\w+?/
 				},
 				'datetime':		{
-					regexp: /(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})/,
-					parse: function(d, yyyy, mm, dd) { 
-						return new Date(yyyy, mm - 1, dd); 
+					regexp: /(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z/,
+					parse: function(d, yyyy, mm, dd, hh, MM, ss, ms) { 
+						return new Date(yyyy, mm - 1, dd, hh, MM, ss, ms); 
 					},
 					stringify: function(date) {
 						return date.toISOString();
@@ -92,16 +92,18 @@
 				while (match = regex.exec(item)) {
 					var arr = match[1].split(':');
 					var first = arr[0];
-					var extra = arr[1];
+					var constraint = arr[1];
 					items.push('s=s.replace("' + match[0] + '",p.' + first + ');');
 					item = item.replace(match[0], '');
-					if (extra) {
+					if (constraint) {
 						// check for known datatype
-						if ($.routes.datatypes[extra]) {
-							extra = $.routes.datatypes[extra].regexp.toString();
-							extra = extra.substring(1, extra.length - 2).replace(/\(/g, '').replace(/\)/g, ''); // remove groups
+						if ($.routes.datatypes[constraint]) {
+							constraint = $.routes.datatypes[constraint].regexp.toString();
+							constraint = constraint.replace(/\/[gim]+$/g, ''); // Remove flags
+							constraint = constraint.replace(/\/$|^\//g, ''); // Wrapping slashes
+							constraint = constraint.replace(/[\(\)]/g, ''); // Remove groups
 						}
-						routeexp = routeexp.replace(match[0], '(' + extra + ')');
+						routeexp = routeexp.replace(match[0], '(' + constraint + ')');
 					} else {
 						routeexp = routeexp.replace(match[0], '(.*?)');
 					}
