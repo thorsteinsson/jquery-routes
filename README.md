@@ -8,6 +8,9 @@ Include the [jQuery](http://jquery.com/) library and the jquery.routes.js file.
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 	<script type="text/javascript" src="jquery.routes.js"></script>
 
+**IE 9 and below**
+jQuery routes is now using toISOString function on the Date object. To enable it for older browsers add [the toISOString polyfill found on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString).
+
 **IE 7 and below**
 
 For legacy browser support, be sure to check out the [jQuery.hashchange](http://benalman.com/projects/jquery-hashchange-plugin/) plugin by Ben Alman. *Note that jQuery 1.9 and above is not supported by that plugin.*
