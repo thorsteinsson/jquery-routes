@@ -9,6 +9,7 @@ Include the [jQuery](http://jquery.com/) library and the jquery.routes.js file.
 	<script type="text/javascript" src="jquery.routes.js"></script>
 
 **IE 9 and below**
+
 jQuery routes is now using toISOString function on the Date object. To enable it for older browsers add [the toISOString polyfill found on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString).
 
 **IE 7 and below**
