@@ -1,5 +1,5 @@
 ﻿/*
- * jQuery routes - v1.0
+ * jQuery routes - v2.0
  * Routing in javascript using hashchange event.
  * http://thorsteinsson.is/projects/jquery-routes/
  *
@@ -8,13 +8,63 @@
  * http://creativecommons.org/licenses/by/3.0/
  */
 (function($) {
-	var routecount = 0;
-	var datelpad = function(d) {
-		d = d + '';
-		return d.length < 2 ? '0' + d : d;
-	}
-	$.extend({
+	var routecount = 0,
+		datelpad = function(d) {
+			d = d + '';
+			return d.length < 2 ? '0' + d : d;
+		},
+		legacyDateTypes = {
+			'date':		{
+				regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
+				parse: function(d, dd, mm, yyyy) { 
+					return new Date(yyyy, datelpad(mm - 1), datelpad(dd)); 
+				},
+				stringify: function(date) {
+					return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear();
+				}
+			},
+			'dateend':  {
+				regexp: /(\d{1,2})\-(\d{1,2})\-(\d{4})/,
+				parse: function(d, dd, mm, yyyy) { 
+					return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); 
+				},
+				stringify: function(date) { 
+					return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear();
+				}
+			}
+		},
+		isoDateTypes = {
+			'date':		{
+				regexp: /(\d{4})\-(\d{1,2})\-(\d{1,2})/,
+				parse: function(d, yyyy, mm, dd) { 
+					return new Date(yyyy, mm - 1, dd); 
+				},
+				stringify: function(date) {
+					return date.toISOString().split('T')[0];
+				}
+			},
+			'dateend':  {
+				regexp: /(\d{4})\-(\d{1,2})\-(\d{1,2})/,
+				parse: function(d, yyyy, mm, dd) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
+				stringify: function(date) { 
+					return date.toISOString().split('T')[0];
+				}
+			}
+		};
+
+	$.extend({		
 		routes: {
+			useIsoDates: function(iso){
+				if(iso === true){
+					this.datatypes.date = isoDateTypes.date;
+					this.datatypes.dateend = isoDateTypes.dateend;
+				}
+				else {
+					this.datatypes.date = legacyDateTypes.date;
+					this.datatypes.dateend = legacyDateTypes.dateend;
+				}
+			},
+		
 			// datatypes for parameters, regexp groups are passed as parameters to parsers
 			datatypes: {
 				'int':		{
@@ -31,18 +81,17 @@
 				'string':	{
 					regexp: /\w+?/
 				},
-				'date':		{
-					regexp: /(\d{2})\-(\d{2})\-(\d{4})/,
-					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd); },
+				'datetime':		{
+					regexp: /(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z/,
+					parse: function(d, yyyy, mm, dd, hh, MM, ss, ms) { 
+						return new Date(yyyy, mm - 1, dd, hh, MM, ss, ms); 
+					},
 					stringify: function(date) {
-						return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear();
+						return date.toISOString();
 					}
 				},
-				'dateend':  {
-					regexp: /(\d{2})\-(\d{2})\-(\d{4})/,
-					parse: function(d, dd, mm, yyyy) { return new Date(yyyy, mm - 1, dd, 23, 59, 59, 999); },
-					stringify: function(date) { return datelpad(date.getDate()) + '-' + datelpad(date.getMonth() + 1) + '-' + date.getFullYear(); }
-				}
+				'date':	isoDateTypes.date,
+				'dateend': isoDateTypes.dateend
 			},
 			// object containing all the routes by name
 			list: {},
@@ -71,7 +120,8 @@
 
 				// all routes have a name
 				if (name === undefined) { name = 'route' + (++routecount); }
-
+				if (route[route.length - 1] !== '/') { route += '/'; }
+				
 				var regex = /\{\s*?([a-zA-Z0-9:\|\\*\?\.]*?)\s*?\}/gim;
 				var items = ['var s="#' + route + '";'];
 				var item = route;
@@ -82,19 +132,25 @@
 				while (match = regex.exec(item)) {
 					var arr = match[1].split(':');
 					var first = arr[0];
-					var extra = arr[1];
+					var constraint = arr[1];
 					items.push('s=s.replace("' + match[0] + '",p.' + first + ');');
 					item = item.replace(match[0], '');
-					if (extra) {
+					if (constraint) {
 						// check for known datatype
-						if ($.routes.datatypes[extra]) {
-							extra = $.routes.datatypes[extra].regexp.toString();
-							extra = extra.substring(1, extra.length - 2).replace(/\(/g, '').replace(/\)/g, ''); // remove groups
+						if ($.routes.datatypes[constraint]) {
+							constraint = $.routes.datatypes[constraint].regexp.toString();
+							constraint = constraint.replace(/\/[gim]+$/g, ''); // Remove flags
+							constraint = constraint.replace(/\/$|^\//g, ''); // Wrapping slashes
+							constraint = constraint.replace(/[\(\)]/g, ''); // Remove groups
 						}
-						routeexp = routeexp.replace(match[0], '(' + extra + ')');
+						constraint = '(' + constraint + ')';
 					} else {
-						routeexp = routeexp.replace(match[0], '(.*?)');
+						constraint = '(.*?)';
 					}
+					if(defaults && defaults[first]) {
+						constraint += '?'; // If there is a default, make parameter optional
+					}
+					routeexp = routeexp.replace(match[0], constraint);
 					vars.push(match[1].split(':'));
 					regex.lastIndex = match.index;
 				}
@@ -129,7 +185,6 @@
 					return combine(getParams(p));
 				};
 
-
 				// extract parameters from hash
 				var extract = function(hash) {
 					// load the defaults
@@ -143,7 +198,7 @@
 							val = [val];
 							// get arguments for parse
 							if (datatype.regexp) {
-								var p = datatype.regexp.exec(args[x+1]);
+								var p = datatype.regexp.exec(args[x+1] || datatype.stringify(defaults[vars[x]]));
 								for (var y = 1; y < p.length; y++) {
 									val.push(p[y]);
 								}
@@ -273,8 +328,12 @@
 
 	// Run route on document ready
 	$(function() {
-		if (location.hash.length > 0) {
-			$.routes.load(location.hash);
+		var hash = location.hash;
+		if (hash.length > 0) {
+			if(hash[hash.length-1] !== '/'){
+				hash += '/';
+			}
+			$.routes.load(hash);
 		}
 	});
 }(jQuery));
