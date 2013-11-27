@@ -5,8 +5,10 @@ Setup
 -----
 Include the [jQuery](http://jquery.com/) library and the jquery.routes.js file.
 
+```html
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 	<script type="text/javascript" src="jquery.routes.js"></script>
+```
 
 **IE 9 and below**
 
@@ -20,7 +22,7 @@ Usage
 -----
 Link routes to javascript functions. Make sure the functions prepare the ui for this state of the application. Remember that you can go directly to a route without visiting the main route.
 
-	<script type="text/javascript">
+```js
 	var newsModule = {
 		fetch: function() {
 			$('#news').load('news.php?id=' + this.id).show();
@@ -32,15 +34,15 @@ Link routes to javascript functions. Make sure the functions prepare the ui for 
 
 	$.routes.add('/news/{id:int}/', newsModule.fetch);
 	$.routes.add('/news/', newsModule.fetchAll);
-	</script>
+```
 
 or anonymous functions
 
-	<script type="text/javascript">
+```js
 	$.routes.add('/news/{id:int}/', function() {
 		$('#news').load('news.php?id=' + this.id).show();
 	});
-	</script>
+```
 
 Parameters are defined with curly braces. The syntax is {name:datatype}. The datatype can be int, float, word, date or you can create your own.
 Datatypes are added in $.routes.datatypes and parsers in $.routes.parsers.
@@ -49,7 +51,7 @@ The functions will get named parameters in "this", ex. this.page == 'news'.
 
 Named routes
 
-	<script type="text/javascript">
+```js
 	// register the route
 	$.routes.add('/news/{when:date}/', 'newsByDate', function() {
 		alert('loading news from ' + this.when);
@@ -61,7 +63,7 @@ Named routes
 			when: new Date(2010, 1, 19);
 		});
 	});
-	</script>
+```
 
 Use routeTo function to change the url or use execute function to only execute the function for that route.
 
