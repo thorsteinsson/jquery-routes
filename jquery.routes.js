@@ -221,7 +221,7 @@
 						location.href = this.url(data);
 					},
 					execute: function(data) {
-						this.func.apply($.extend({}, defaults, data));
+			                        this.func.apply($.extend({}, {routeName: name}, defaults, data));
 					},
 					vars: vars,
 					defaults: defaults,
